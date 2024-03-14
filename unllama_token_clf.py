@@ -9,7 +9,7 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorForTokenClassification
 from transformers import TrainingArguments, Trainer
 from peft import get_peft_model, LoraConfig, TaskType
-
+import torch
 from modeling_llama import UnmaskingLlamaForTokenClassification
 
 
@@ -46,6 +46,9 @@ batch_size = 8
 learning_rate = 1e-4
 max_length = 64
 lora_r = 12
+device = torch.device("cuda")
+print("Device is", device)
+
 if model_size == '7b':
     model_id = 'NousResearch/Llama-2-7b-hf'
 elif model_size == '13b':
@@ -68,14 +71,20 @@ elif task == 'CI':
     label2id = {'B-O': 0, 'B-TP': 1, 'B-ATTRIBUTE': 2, 'B-SENDER': 3, 'B-RECEIVER': 4, 'B-SUBJECT': 5}
 else:
     raise NotImplementedError
+
+print("I am here!")
+
 id2label = {v: k for k, v in label2id.items()}
 label_list = list(label2id.keys()) # ds["train"].features[f"ner_tags"].feature.names
+print("Label list is acquired")
 model = UnmaskingLlamaForTokenClassification.from_pretrained(
     model_id, num_labels=len(label2id), id2label=id2label, label2id=label2id
 ).bfloat16()
 peft_config = LoraConfig(task_type=TaskType.TOKEN_CLS, inference_mode=False, r=lora_r, lora_alpha=32, lora_dropout=0.1)
 model = get_peft_model(model, peft_config)
 model.print_trainable_parameters()
+# model.to(device)
+
 
 
 def tokenize_and_align_labels(examples):
