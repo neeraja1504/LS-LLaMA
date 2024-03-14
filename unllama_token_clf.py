@@ -27,7 +27,7 @@ def load_CI():
     ret = {}
     for split_name in ['train_large', 'test_large']:
         data = []
-        with open(f'./data/CI/{split_name}.jsonl', 'r') as reader:
+        with open(f'./data/ontonotesv5/CI/{split_name}.jsonl', 'r') as reader:
             for line in reader:
                 data.append(json.loads(line))
         ret[split_name] = Dataset.from_list(data)
